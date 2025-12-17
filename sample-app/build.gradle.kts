@@ -42,9 +42,6 @@ android {
 }
 
 dependencies {
-    // SDK Module
-    implementation(project(":biometric-security-sdk"))
-    
     // AndroidX
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.appcompat:appcompat:1.6.1")

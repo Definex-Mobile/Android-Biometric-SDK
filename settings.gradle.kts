@@ -15,6 +15,5 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "Android-Biometric-SDK"
-include(":biometric-security-sdk")
 include(":sample-app")
 
