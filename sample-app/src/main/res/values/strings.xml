@@ -1,44 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Biometric SDK Sample</string>
-    
-    <!-- Authentication Section -->
-    <string name="section_authentication">Biometric Authentication</string>
-    <string name="btn_authenticate">Authenticate</string>
-    <string name="btn_authenticate_fingerprint">Authenticate with Fingerprint</string>
-    <string name="btn_authenticate_face">Authenticate with Face</string>
-    <string name="btn_authenticate_iris">Authenticate with Iris</string>
-    <string name="label_auth_result">Authentication Result:</string>
-    <string name="result_none">No authentication attempted yet</string>
-    
-    <!-- Security Section -->
-    <string name="section_security">Security Risk Assessment</string>
-    <string name="btn_evaluate_risk">Evaluate Security Risk</string>
-    <string name="label_risk_report">Risk Report:</string>
-    <string name="risk_none">No risk assessment performed yet</string>
-    
-    <!-- Policy Section -->
-    <string name="section_policy">Security Policy Configuration</string>
-    <string name="policy_rooted">Block Rooted Devices</string>
-    <string name="policy_emulator">Block Emulators</string>
-    <string name="policy_hooked">Block Hooked Devices</string>
-    <string name="policy_debug">Block Debug Builds</string>
-    <string name="btn_apply_policy">Apply Policy</string>
-    
-    <!-- Storage Section -->
-    <string name="section_storage">Encrypted Storage Demo</string>
-    <string name="hint_storage_key">Key</string>
-    <string name="hint_storage_value">Value</string>
-    <string name="btn_save">Save Encrypted</string>
-    <string name="btn_load">Load Encrypted</string>
-    <string name="btn_clear_storage">Clear Storage</string>
-    <string name="label_storage_result">Storage Result:</string>
-    <string name="storage_none">No storage operations yet</string>
-    
-    <!-- Capabilities Section -->
-    <string name="section_capabilities">Device Capabilities</string>
-    <string name="btn_check_capabilities">Check Capabilities</string>
-    <string name="label_capabilities">Available Biometrics:</string>
-    <string name="capabilities_none">Not checked yet</string>
+    <string name="app_name">Sample App</string>
 </resources>
-
