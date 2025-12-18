@@ -1,5 +1,6 @@
 package com.definex.biometricsdk.auth
 
+import android.hardware.biometrics.BiometricManager
 import android.os.Build
 import androidx.biometric.BiometricPrompt
 import androidx.biometric.BiometricPrompt.AuthenticationCallback
@@ -94,15 +95,12 @@ internal class BiometricPromptManager(
         }
         
         // Set allowed authenticators
-        // API 30 (Android 11) doesn't support setAllowedAuthenticators with BIOMETRIC alone
-        // Use setAllowedAuthenticators only on API 31+ (Android 12+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             // API 31+: Use BIOMETRIC_STRONG for maximum security
             builder.setAllowedAuthenticators(
-                BiometricPrompt.AUTHENTICATORS_ALLOWED_BIOMETRIC_STRONG
+                BiometricManager.Authenticators.BIOMETRIC_STRONG
             )
         }
-        // API 30 and below: Don't set allowed authenticators, use default behavior
         
         return builder.build()
     }
