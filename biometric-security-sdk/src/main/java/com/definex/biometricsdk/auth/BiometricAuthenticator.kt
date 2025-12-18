@@ -3,7 +3,6 @@ package com.definex.biometricsdk.auth
 import android.content.Context
 import androidx.biometric.BiometricPrompt
 import androidx.fragment.app.FragmentActivity
-import com.definex.biometricsdk.crypto.SecureStorage
 import com.definex.biometricsdk.model.AuthResult
 import com.definex.biometricsdk.model.BiometricType
 import com.definex.biometricsdk.model.RiskReport
@@ -99,17 +98,6 @@ class BiometricAuthenticator {
     }
     
     /**
-     * Creates a SecureStorage instance for encrypted data storage.
-     * 
-     * @param context Android context
-     * @return SecureStorage instance
-     */
-    fun createSecureStorage(context: Context): SecureStorage {
-        Logger.d("Creating secure storage instance")
-        return SecureStorage(context)
-    }
-    
-    /**
      * Gets the available biometric types on the device.
      * 
      * @param context Android context
@@ -140,4 +128,3 @@ class BiometricAuthenticator {
         Logger.setDebugEnabled(enabled)
     }
 }
-

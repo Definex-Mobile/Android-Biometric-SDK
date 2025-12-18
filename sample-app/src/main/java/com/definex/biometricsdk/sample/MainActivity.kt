@@ -7,12 +7,10 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.definex.biometricsdk.auth.BiometricAuthenticator
-import com.definex.biometricsdk.crypto.SecureStorage
 import com.definex.biometricsdk.model.AuthResult
 import com.definex.biometricsdk.model.BiometricType
 import com.definex.biometricsdk.model.SecurityPolicy
 import com.google.android.material.switchmaterial.SwitchMaterial
-import com.google.android.material.textfield.TextInputEditText
 
 /**
  * Sample app demonstrating the Biometric Security SDK capabilities.
@@ -20,7 +18,6 @@ import com.google.android.material.textfield.TextInputEditText
 class MainActivity : AppCompatActivity() {
     
     private lateinit var biometricAuthenticator: BiometricAuthenticator
-    private lateinit var secureStorage: SecureStorage
     
     // UI Components
     private lateinit var btnAuthenticate: Button
@@ -41,13 +38,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var switchDebug: SwitchMaterial
     private lateinit var btnApplyPolicy: Button
     
-    private lateinit var etStorageKey: TextInputEditText
-    private lateinit var etStorageValue: TextInputEditText
-    private lateinit var btnSave: Button
-    private lateinit var btnLoad: Button
-    private lateinit var btnClearStorage: Button
-    private lateinit var tvStorageResult: TextView
-    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -55,7 +45,6 @@ class MainActivity : AppCompatActivity() {
         // Initialize SDK
         biometricAuthenticator = BiometricAuthenticator()
         biometricAuthenticator.setDebugLogging(true)
-        secureStorage = biometricAuthenticator.createSecureStorage(this)
         
         // Initialize UI
         initializeViews()
@@ -84,14 +73,6 @@ class MainActivity : AppCompatActivity() {
         switchHooked = findViewById(R.id.switchHooked)
         switchDebug = findViewById(R.id.switchDebug)
         btnApplyPolicy = findViewById(R.id.btnApplyPolicy)
-        
-        // Storage
-        etStorageKey = findViewById(R.id.etStorageKey)
-        etStorageValue = findViewById(R.id.etStorageValue)
-        btnSave = findViewById(R.id.btnSave)
-        btnLoad = findViewById(R.id.btnLoad)
-        btnClearStorage = findViewById(R.id.btnClearStorage)
-        tvStorageResult = findViewById(R.id.tvStorageResult)
     }
     
     private fun setupListeners() {
@@ -125,19 +106,6 @@ class MainActivity : AppCompatActivity() {
         // Policy
         btnApplyPolicy.setOnClickListener {
             applySecurityPolicy()
-        }
-        
-        // Storage
-        btnSave.setOnClickListener {
-            saveToStorage()
-        }
-        
-        btnLoad.setOnClickListener {
-            loadFromStorage()
-        }
-        
-        btnClearStorage.setOnClickListener {
-            clearStorage()
         }
     }
     
@@ -248,64 +216,4 @@ class MainActivity : AppCompatActivity() {
             Toast.LENGTH_SHORT
         ).show()
     }
-    
-    private fun saveToStorage() {
-        val key = etStorageKey.text?.toString()
-        val value = etStorageValue.text?.toString()
-        
-        if (key.isNullOrBlank() || value.isNullOrBlank()) {
-            Toast.makeText(this, "Please enter both key and value", Toast.LENGTH_SHORT).show()
-            return
-        }
-        
-        try {
-            secureStorage.putEncryptedString(key, value)
-            tvStorageResult.text = "✓ Saved encrypted: '$key' = '$value'"
-            tvStorageResult.setTextColor(Color.GREEN)
-            Toast.makeText(this, "Data saved securely", Toast.LENGTH_SHORT).show()
-        } catch (e: Exception) {
-            tvStorageResult.text = "✗ Error saving: ${e.message}"
-            tvStorageResult.setTextColor(Color.RED)
-        }
-    }
-    
-    private fun loadFromStorage() {
-        val key = etStorageKey.text?.toString()
-        
-        if (key.isNullOrBlank()) {
-            Toast.makeText(this, "Please enter a key", Toast.LENGTH_SHORT).show()
-            return
-        }
-        
-        try {
-            val value = secureStorage.getEncryptedString(key)
-            if (value != null) {
-                etStorageValue.setText(value)
-                tvStorageResult.text = "✓ Loaded encrypted value for key '$key'"
-                tvStorageResult.setTextColor(Color.GREEN)
-                Toast.makeText(this, "Data loaded successfully", Toast.LENGTH_SHORT).show()
-            } else {
-                tvStorageResult.text = "✗ No value found for key '$key'"
-                tvStorageResult.setTextColor(Color.RED)
-            }
-        } catch (e: Exception) {
-            tvStorageResult.text = "✗ Error loading: ${e.message}"
-            tvStorageResult.setTextColor(Color.RED)
-        }
-    }
-    
-    private fun clearStorage() {
-        try {
-            secureStorage.clear()
-            etStorageKey.text?.clear()
-            etStorageValue.text?.clear()
-            tvStorageResult.text = "✓ All encrypted storage cleared"
-            tvStorageResult.setTextColor(Color.GREEN)
-            Toast.makeText(this, "Storage cleared", Toast.LENGTH_SHORT).show()
-        } catch (e: Exception) {
-            tvStorageResult.text = "✗ Error clearing storage: ${e.message}"
-            tvStorageResult.setTextColor(Color.RED)
-        }
-    }
 }
-

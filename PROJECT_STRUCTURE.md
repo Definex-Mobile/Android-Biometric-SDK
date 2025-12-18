@@ -19,7 +19,6 @@ Android-Biometric-SDK/
 │   │       ├── crypto/                  # Encryption & Key Management
 │   │       │   ├── KeyStoreManager.kt             (Hardware-backed keys)
 │   │       │   ├── CipherProvider.kt              (AES-GCM cipher)
-│   │       │   └── SecureStorage.kt               (Encrypted storage)
 │   │       ├── model/                   # Data Models
 │   │       │   ├── BiometricType.kt               (Enum: FINGERPRINT, FACE, IRIS)
 │   │       │   ├── AuthResult.kt                  (Sealed class)
@@ -230,7 +229,6 @@ if (report.rooted) {
 ### Secure Storage
 
 ```kotlin
-val storage = authenticator.createSecureStorage(context)
 storage.putEncryptedString("key", "value")
 val value = storage.getEncryptedString("key")
 ```

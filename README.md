@@ -197,28 +197,6 @@ biometricAuthenticator.authenticate(this) { result ->
 }
 ```
 
-### Secure Storage
-
-```kotlin
-// Create secure storage instance
-val secureStorage = biometricAuthenticator.createSecureStorage(context)
-
-// Store encrypted data
-secureStorage.putEncryptedString("api_token", "secret_value")
-secureStorage.putEncryptedInt("user_id", 12345)
-secureStorage.putEncryptedBoolean("is_premium", true)
-
-// Retrieve encrypted data
-val token = secureStorage.getEncryptedString("api_token")
-val userId = secureStorage.getEncryptedInt("user_id")
-val isPremium = secureStorage.getEncryptedBoolean("is_premium")
-
-// Remove data
-secureStorage.remove("api_token")
-
-// Clear all data
-secureStorage.clear()
-```
 
 ## API Reference
 
@@ -233,7 +211,6 @@ Main entry point for the SDK.
 - `setSecurityPolicy(policy)` - Set security policy to enforce
 - `getAvailableBiometrics(context)` - Get available biometric types
 - `isBiometricAvailable(context, type)` - Check if specific biometric is available
-- `createSecureStorage(context)` - Create secure storage instance
 - `setDebugLogging(enabled)` - Enable/disable debug logging
 
 ### BiometricType
@@ -288,32 +265,6 @@ Static methods:
 - `SecurityPolicy.moderate()` - Block rooted and hooked devices
 - `SecurityPolicy.strict()` - Block all security risks
 
-### SecureStorage
-
-Secure storage using EncryptedSharedPreferences:
-
-- `putEncryptedString(key, value)` - Store encrypted string
-- `getEncryptedString(key)` - Retrieve encrypted string
-- `putEncryptedInt(key, value)` - Store encrypted integer
-- `getEncryptedInt(key, defaultValue)` - Retrieve encrypted integer
-- `putEncryptedBoolean(key, value)` - Store encrypted boolean
-- `getEncryptedBoolean(key, defaultValue)` - Retrieve encrypted boolean
-- `remove(key)` - Remove entry
-- `contains(key)` - Check if key exists
-- `clear()` - Clear all data
-
-## Security Best Practices
-
-### 1. Always Use Security Policies
-
-```kotlin
-// For production apps, use at least moderate security
-biometricAuthenticator.setSecurityPolicy(SecurityPolicy.moderate())
-```
-
-### 2. Check Capabilities Before Authentication
-
-```kotlin
 val availableBiometrics = biometricAuthenticator.getAvailableBiometrics(context)
 if (availableBiometrics.isEmpty()) {
     // No biometric authentication available
@@ -345,12 +296,6 @@ if (BuildConfig.DEBUG) {
 }
 ```
 
-### 5. Use Secure Storage for Sensitive Data
-
-```kotlin
-// Never store sensitive data in plain SharedPreferences
-val secureStorage = biometricAuthenticator.createSecureStorage(context)
-secureStorage.putEncryptedString("auth_token", token)
 ```
 
 ## Sample App
