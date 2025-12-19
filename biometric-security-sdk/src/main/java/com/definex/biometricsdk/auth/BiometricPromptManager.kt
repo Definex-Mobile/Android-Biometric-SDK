@@ -1,6 +1,6 @@
 package com.definex.biometricsdk.auth
 
-import android.hardware.biometrics.BiometricManager
+import androidx.biometric.BiometricManager
 import android.os.Build
 import androidx.biometric.BiometricPrompt
 import androidx.biometric.BiometricPrompt.AuthenticationCallback
@@ -78,21 +78,9 @@ internal class BiometricPromptManager(
             .setSubtitle("Authenticate to continue")
             .setNegativeButtonText("Cancel")
         
-        // Set description based on required biometric type
-        when (requiredBiometric) {
-            BiometricType.FINGERPRINT -> {
-                builder.setDescription("Use your fingerprint to authenticate")
-            }
-            BiometricType.FACE -> {
-                builder.setDescription("Use your face to authenticate")
-            }
-            BiometricType.IRIS -> {
-                builder.setDescription("Use your iris to authenticate")
-            }
-            null -> {
-                builder.setDescription("Use your biometric to authenticate")
-            }
-        }
+        // Set unified description for all biometric types
+        // This avoids confusion when the system shows a different biometric than requested
+        builder.setDescription("Confirm your identity to continue")
         
         // Set allowed authenticators
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
