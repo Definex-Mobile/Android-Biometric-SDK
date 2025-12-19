@@ -84,9 +84,9 @@ internal class BiometricPromptManager(
         
         // Set allowed authenticators
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            // API 31+: Use BIOMETRIC_STRONG for maximum security
+            // API 31+: Allow both strong and weak biometrics (includes face)
             builder.setAllowedAuthenticators(
-                BiometricManager.Authenticators.BIOMETRIC_STRONG
+                BiometricManager.Authenticators.BIOMETRIC_WEAK
             )
         }
         

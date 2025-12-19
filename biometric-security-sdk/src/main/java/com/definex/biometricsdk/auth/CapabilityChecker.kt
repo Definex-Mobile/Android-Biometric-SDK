@@ -2,44 +2,46 @@ package com.definex.biometricsdk.auth
 
 import android.content.Context
 import android.content.pm.PackageManager
+import android.hardware.fingerprint.FingerprintManager
+import android.os.Build
 import androidx.biometric.BiometricManager
-import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
+import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK
 import com.definex.biometricsdk.model.BiometricType
 import com.definex.biometricsdk.util.Logger
 
 /**
  * Checks device capabilities for biometric authentication.
- * Detects which biometric sensors are available on the device.
+ * Detects which biometric sensors are available AND enrolled on the device.
  */
 internal object CapabilityChecker {
     
     /**
-     * Gets all available biometric types on the device.
+     * Gets all available AND enrolled biometric types on the device.
      * 
      * @param context Android context
-     * @return Set of available BiometricType
+     * @return Set of available and enrolled BiometricType
      */
     fun getAvailableBiometrics(context: Context): Set<BiometricType> {
         val availableBiometrics = mutableSetOf<BiometricType>()
         
         // First check if biometric authentication is available at all
         val biometricManager = BiometricManager.from(context)
-        val canAuthenticate = biometricManager.canAuthenticate(BIOMETRIC_STRONG)
+        val canAuthenticate = biometricManager.canAuthenticate(BIOMETRIC_WEAK)
         
         if (canAuthenticate != BiometricManager.BIOMETRIC_SUCCESS) {
-            Logger.d("No biometric authentication available: $canAuthenticate")
+            Logger.d("No biometric authentication available or enrolled: $canAuthenticate")
             return emptySet()
         }
         
-        // Check for specific biometric types
-        if (hasFingerprint(context)) {
+        // Check for specific biometric types (hardware + enrollment)
+        if (hasFingerprintEnrolled(context)) {
             availableBiometrics.add(BiometricType.FINGERPRINT)
-            Logger.d("Fingerprint sensor detected")
+            Logger.d("Fingerprint enrolled and detected")
         }
         
-        if (hasFace(context)) {
+        if (hasFaceEnrolled(context)) {
             availableBiometrics.add(BiometricType.FACE)
-            Logger.d("Face sensor detected")
+            Logger.d("Face enrolled and detected")
         }
         
         if (hasIris(context)) {
@@ -47,49 +49,66 @@ internal object CapabilityChecker {
             Logger.d("Iris sensor detected")
         }
         
-        Logger.d("Available biometrics: $availableBiometrics")
+        Logger.d("Available and enrolled biometrics: $availableBiometrics")
         return availableBiometrics
     }
     
     /**
-     * Checks if fingerprint sensor is available.
+     * Checks if fingerprint sensor is available AND has enrolled fingerprints.
      */
-    private fun hasFingerprint(context: Context): Boolean {
+    @Suppress("DEPRECATION")
+    private fun hasFingerprintEnrolled(context: Context): Boolean {
         return try {
-            context.packageManager.hasSystemFeature(PackageManager.FEATURE_FINGERPRINT)
+            // Check hardware
+            if (!context.packageManager.hasSystemFeature(PackageManager.FEATURE_FINGERPRINT)) {
+                return false
+            }
+            
+            // Check enrollment
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                val fingerprintManager = context.getSystemService(Context.FINGERPRINT_SERVICE) as? FingerprintManager
+                fingerprintManager?.hasEnrolledFingerprints() ?: false
+            } else {
+                false
+            }
         } catch (e: Exception) {
-            Logger.w("Error checking fingerprint capability", e)
+            Logger.w("Error checking fingerprint enrollment", e)
             false
         }
     }
     
     /**
-     * Checks if face sensor is available.
+     * Checks if face sensor is available AND has enrolled face data.
      * Uses multiple detection methods for better accuracy.
      */
-    private fun hasFace(context: Context): Boolean {
+    private fun hasFaceEnrolled(context: Context): Boolean {
         return try {
-            // Method 1: Check PackageManager feature (may not work on all devices)
-            if (context.packageManager.hasSystemFeature(PackageManager.FEATURE_FACE)) {
-                Logger.d("Face detected via PackageManager.FEATURE_FACE")
+            // First check if fingerprint is enrolled
+            val fingerprintEnrolled = hasFingerprintEnrolled(context)
+            
+            // Check if biometric is available
+            val biometricManager = BiometricManager.from(context)
+            val canAuthenticate = biometricManager.canAuthenticate(BIOMETRIC_WEAK)
+            
+            // If biometric authentication is available but fingerprint is not enrolled,
+            // then face must be enrolled (or iris, but iris is rare)
+            if (canAuthenticate == BiometricManager.BIOMETRIC_SUCCESS && !fingerprintEnrolled) {
+                Logger.d("Face enrolled detected via inference (biometric available, fingerprint not enrolled)")
                 return true
             }
             
-            // Method 2: If biometric is available but fingerprint is not, assume face is available
-            val biometricManager = BiometricManager.from(context)
-            val canAuthenticate = biometricManager.canAuthenticate(BIOMETRIC_STRONG)
-            val hasFingerprint = context.packageManager.hasSystemFeature(PackageManager.FEATURE_FINGERPRINT)
-            
-            // If biometric authentication is available and fingerprint is not available,
-            // then face authentication must be available
-            if (canAuthenticate == BiometricManager.BIOMETRIC_SUCCESS && !hasFingerprint) {
-                Logger.d("Face detected via inference (biometric available, fingerprint not)")
-                return true
+            // Method 2: Check PackageManager feature
+            if (context.packageManager.hasSystemFeature(PackageManager.FEATURE_FACE)) {
+                // If feature exists and biometric is available, assume face is enrolled
+                if (canAuthenticate == BiometricManager.BIOMETRIC_SUCCESS) {
+                    Logger.d("Face enrolled detected via PackageManager.FEATURE_FACE")
+                    return true
+                }
             }
             
             false
         } catch (e: Exception) {
-            Logger.w("Error checking face capability", e)
+            Logger.w("Error checking face enrollment", e)
             false
         }
     }
@@ -126,7 +145,7 @@ internal object CapabilityChecker {
      */
     fun isAnyBiometricAvailable(context: Context): Boolean {
         val biometricManager = BiometricManager.from(context)
-        val canAuthenticate = biometricManager.canAuthenticate(BIOMETRIC_STRONG)
+        val canAuthenticate = biometricManager.canAuthenticate(BIOMETRIC_WEAK)
         return canAuthenticate == BiometricManager.BIOMETRIC_SUCCESS
     }
 }
