@@ -65,10 +65,29 @@ internal object CapabilityChecker {
     
     /**
      * Checks if face sensor is available.
+     * Uses multiple detection methods for better accuracy.
      */
     private fun hasFace(context: Context): Boolean {
         return try {
-            context.packageManager.hasSystemFeature(PackageManager.FEATURE_FACE)
+            // Method 1: Check PackageManager feature (may not work on all devices)
+            if (context.packageManager.hasSystemFeature(PackageManager.FEATURE_FACE)) {
+                Logger.d("Face detected via PackageManager.FEATURE_FACE")
+                return true
+            }
+            
+            // Method 2: If biometric is available but fingerprint is not, assume face is available
+            val biometricManager = BiometricManager.from(context)
+            val canAuthenticate = biometricManager.canAuthenticate(BIOMETRIC_STRONG)
+            val hasFingerprint = context.packageManager.hasSystemFeature(PackageManager.FEATURE_FINGERPRINT)
+            
+            // If biometric authentication is available and fingerprint is not available,
+            // then face authentication must be available
+            if (canAuthenticate == BiometricManager.BIOMETRIC_SUCCESS && !hasFingerprint) {
+                Logger.d("Face detected via inference (biometric available, fingerprint not)")
+                return true
+            }
+            
+            false
         } catch (e: Exception) {
             Logger.w("Error checking face capability", e)
             false
@@ -111,4 +130,3 @@ internal object CapabilityChecker {
         return canAuthenticate == BiometricManager.BIOMETRIC_SUCCESS
     }
 }
-
