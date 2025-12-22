@@ -8,7 +8,6 @@ import androidx.biometric.BiometricPrompt.PromptInfo
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import com.definex.biometricsdk.model.AuthResult
-import com.definex.biometricsdk.model.BiometricType
 import com.definex.biometricsdk.util.Logger
 
 /**
@@ -21,13 +20,12 @@ internal class BiometricPromptManager(
     
     /**
      * Shows the biometric prompt for authentication.
+     * The system will automatically use any available enrolled biometric.
      * 
-     * @param requiredBiometric The specific biometric type required, or null for any
      * @param cryptoObject Optional crypto object for cryptographic operations
      * @param callback Callback for authentication result
      */
     fun authenticate(
-        requiredBiometric: BiometricType?,
         cryptoObject: BiometricPrompt.CryptoObject? = null,
         callback: (AuthResult) -> Unit
     ) {
@@ -59,7 +57,7 @@ internal class BiometricPromptManager(
         }
         
         val biometricPrompt = BiometricPrompt(activity, executor, authCallback)
-        val promptInfo = buildPromptInfo(requiredBiometric)
+        val promptInfo = buildPromptInfo()
         
         Logger.d("Showing biometric prompt")
         if (cryptoObject != null) {
@@ -72,15 +70,12 @@ internal class BiometricPromptManager(
     /**
      * Builds the PromptInfo configuration for BiometricPrompt.
      */
-    private fun buildPromptInfo(requiredBiometric: BiometricType?): PromptInfo {
+    private fun buildPromptInfo(): PromptInfo {
         val builder = PromptInfo.Builder()
             .setTitle("Biometric Authentication")
             .setSubtitle("Authenticate to continue")
             .setNegativeButtonText("Cancel")
-        
-        // Set unified description for all biometric types
-        // This avoids confusion when the system shows a different biometric than requested
-        builder.setDescription("Confirm your identity to continue")
+            .setDescription("Confirm your identity to continue")
         
         // Set allowed authenticators
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -93,4 +88,3 @@ internal class BiometricPromptManager(
         return builder.build()
     }
 }
-

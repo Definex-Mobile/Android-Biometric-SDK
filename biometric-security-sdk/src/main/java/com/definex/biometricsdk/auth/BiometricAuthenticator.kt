@@ -30,15 +30,14 @@ class BiometricAuthenticator {
     
     /**
      * Authenticates the user using biometric authentication.
+     * The system will automatically use any available enrolled biometric (fingerprint, face, etc.)
      * 
      * @param context The FragmentActivity context
-     * @param requiredBiometric The specific biometric type required, or null for any
      * @param challenge Optional challenge string for cryptographic operations
      * @param callback Callback for authentication result
      */
     fun authenticate(
         context: FragmentActivity,
-        requiredBiometric: BiometricType? = null,
         challenge: String? = null,
         callback: (AuthResult) -> Unit
     ) {
@@ -52,24 +51,14 @@ class BiometricAuthenticator {
             return
         }
         
-        // Step 2: Check if required biometric is available
-        if (requiredBiometric != null) {
-            val availableBiometrics = CapabilityChecker.getAvailableBiometrics(context)
-            if (!availableBiometrics.contains(requiredBiometric)) {
-                Logger.w("Required biometric $requiredBiometric not available")
-                callback(AuthResult.Error.BiometricNotSupported(requiredBiometric))
-                return
-            }
-        } else {
-            // Check if any biometric is available
-            if (!CapabilityChecker.isAnyBiometricAvailable(context)) {
-                Logger.w("No biometric authentication available")
-                callback(AuthResult.Error.AuthenticationError(
-                    errorCode = BiometricPrompt.ERROR_NO_BIOMETRICS,
-                    errorMessage = "No biometric authentication available on this device"
-                ))
-                return
-            }
+        // Step 2: Check if any biometric is available
+        if (!CapabilityChecker.isAnyBiometricAvailable(context)) {
+            Logger.w("No biometric authentication available")
+            callback(AuthResult.Error.AuthenticationError(
+                errorCode = BiometricPrompt.ERROR_NO_BIOMETRICS,
+                errorMessage = "No biometric authentication available on this device"
+            ))
+            return
         }
         
         // Step 3: Show biometric prompt
@@ -80,7 +69,6 @@ class BiometricAuthenticator {
         val cryptoObject: BiometricPrompt.CryptoObject? = null
         
         promptManager.authenticate(
-            requiredBiometric = requiredBiometric,
             cryptoObject = cryptoObject,
             callback = callback
         )

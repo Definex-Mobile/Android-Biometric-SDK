@@ -96,7 +96,6 @@ class MainActivity : AppCompatActivity() {
         
         biometricAuthenticator.authenticate(
             context = this,
-            requiredBiometric = null, // Let system choose available biometric
             challenge = null
         ) { result ->
             handleAuthResult(result)
