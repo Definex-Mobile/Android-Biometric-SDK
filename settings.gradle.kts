@@ -16,5 +16,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "Android-Biometric-SDK"
 include(":biometric-security-sdk")
-include(":sample-app")
-
+// Sample app excluded from JitPack build
+// include(":sample-app")
