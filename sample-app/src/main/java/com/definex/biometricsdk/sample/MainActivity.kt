@@ -8,7 +8,6 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.definex.biometricsdk.auth.BiometricAuthenticator
 import com.definex.biometricsdk.model.AuthResult
-import com.definex.biometricsdk.model.BiometricType
 import com.definex.biometricsdk.model.SecurityPolicy
 import com.google.android.material.switchmaterial.SwitchMaterial
 
@@ -21,9 +20,6 @@ class MainActivity : AppCompatActivity() {
     
     // UI Components
     private lateinit var btnAuthenticate: Button
-    private lateinit var btnAuthenticateFingerprint: Button
-    private lateinit var btnAuthenticateFace: Button
-    private lateinit var btnAuthenticateIris: Button
     private lateinit var tvAuthResult: TextView
     
     private lateinit var btnCheckCapabilities: Button
@@ -54,9 +50,6 @@ class MainActivity : AppCompatActivity() {
     private fun initializeViews() {
         // Authentication
         btnAuthenticate = findViewById(R.id.btnAuthenticate)
-        btnAuthenticateFingerprint = findViewById(R.id.btnAuthenticateFingerprint)
-        btnAuthenticateFace = findViewById(R.id.btnAuthenticateFace)
-        btnAuthenticateIris = findViewById(R.id.btnAuthenticateIris)
         tvAuthResult = findViewById(R.id.tvAuthResult)
         
         // Capabilities
@@ -76,21 +69,9 @@ class MainActivity : AppCompatActivity() {
     }
     
     private fun setupListeners() {
-        // Authentication buttons
+        // Authentication button - uses any available biometric
         btnAuthenticate.setOnClickListener {
-            authenticate(null)
-        }
-        
-        btnAuthenticateFingerprint.setOnClickListener {
-            authenticate(BiometricType.FINGERPRINT)
-        }
-        
-        btnAuthenticateFace.setOnClickListener {
-            authenticate(BiometricType.FACE)
-        }
-        
-        btnAuthenticateIris.setOnClickListener {
-            authenticate(BiometricType.IRIS)
+            authenticate()
         }
         
         // Capabilities
@@ -109,14 +90,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
     
-    private fun authenticate(requiredBiometric: BiometricType?) {
-        val biometricName = requiredBiometric?.name ?: "Any"
-        tvAuthResult.text = "Authenticating with $biometricName..."
+    private fun authenticate() {
+        tvAuthResult.text = "Authenticating..."
         tvAuthResult.setTextColor(Color.BLUE)
         
         biometricAuthenticator.authenticate(
             context = this,
-            requiredBiometric = requiredBiometric,
+            requiredBiometric = null, // Let system choose available biometric
             challenge = null
         ) { result ->
             handleAuthResult(result)

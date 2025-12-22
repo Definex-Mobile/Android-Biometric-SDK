@@ -38,27 +38,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="@string/btn_authenticate"
-                    android:layout_marginBottom="8dp" />
-
-                <Button
-                    android:id="@+id/btnAuthenticateFingerprint"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/btn_authenticate_fingerprint"
-                    android:layout_marginBottom="8dp" />
-
-                <Button
-                    android:id="@+id/btnAuthenticateFace"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/btn_authenticate_face"
-                    android:layout_marginBottom="8dp" />
-
-                <Button
-                    android:id="@+id/btnAuthenticateIris"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/btn_authenticate_iris"
                     android:layout_marginBottom="12dp" />
 
                 <TextView
@@ -234,4 +213,3 @@
 
     </LinearLayout>
 </ScrollView>
-
