@@ -1,6 +1,7 @@
 plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
+    id("maven-publish")
 }
 
 android {
@@ -55,3 +56,44 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 }
 
+// JitPack Maven Publish Configuration
+afterEvaluate {
+    publishing {
+        publications {
+            create<MavenPublication>("release") {
+                from(components["release"])
+                
+                groupId = "com.github.Definex-Mobile"
+                artifactId = "biometric-security-sdk"
+                version = "1.0.0"
+                
+                pom {
+                    name.set("Biometric Security SDK")
+                    description.set("Android biometric authentication SDK with security policy enforcement")
+                    url.set("https://github.com/Definex-Mobile/Android-Biometric-SDK")
+                    
+                    licenses {
+                        license {
+                            name.set("MIT License")
+                            url.set("https://opensource.org/licenses/MIT")
+                        }
+                    }
+                    
+                    developers {
+                        developer {
+                            id.set("definex-mobile")
+                            name.set("Definex Mobile Team")
+                            email.set("mobile@definex.com")
+                        }
+                    }
+                    
+                    scm {
+                        connection.set("scm:git:github.com/Definex-Mobile/Android-Biometric-SDK.git")
+                        developerConnection.set("scm:git:ssh://github.com/Definex-Mobile/Android-Biometric-SDK.git")
+                        url.set("https://github.com/Definex-Mobile/Android-Biometric-SDK")
+                    }
+                }
+            }
+        }
+    }
+}

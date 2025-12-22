@@ -34,31 +34,41 @@ A commercial-grade Android SDK for biometric authentication with comprehensive s
 - **Kotlin**: 1.9.20+
 - **AndroidX Biometric**: 1.2.0-alpha05+
 
+
 ## Installation
 
-### Step 1: Add the SDK Module
+### Step 1: Add JitPack Repository
 
-Add the `biometric-security-sdk` module to your project:
+Add JitPack to your projects settings.gradle.kts:
 
-```gradle
-// settings.gradle.kts
-include(":biometric-security-sdk")
+```kotlin
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+        maven { url = uri("https://jitpack.io") }
+    }
+}
 ```
 
 ### Step 2: Add Dependency
 
-```gradle
-// app/build.gradle.kts
+Add the SDK dependency to your apps build.gradle.kts:
+
+```kotlin
 dependencies {
-    implementation(project(":biometric-security-sdk"))
+    implementation("com.github.Definex-Mobile:Android-Biometric-SDK:1.0.0")
 }
 ```
 
 ### Step 3: Add Permissions
 
+Add biometric permissions to your AndroidManifest.xml:
+
 ```xml
-<!-- AndroidManifest.xml -->
 <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+<uses-permission android:name="android.permission.USE_FINGERPRINT" />
 ```
 
 ## Quick Start
@@ -76,7 +86,7 @@ class MainActivity : FragmentActivity() {
     fun authenticate() {
         biometricAuthenticator.authenticate(
             context = this,
-            requiredBiometric = null, // Any biometric
+            // System automatically chooses available biometric
             challenge = null
         ) { result ->
             when (result) {
@@ -99,25 +109,6 @@ class MainActivity : FragmentActivity() {
 ```
 
 ### Enforce Specific Biometric Type
-
-```kotlin
-import com.definex.biometricsdk.model.BiometricType
-
-// Require fingerprint authentication
-biometricAuthenticator.authenticate(
-    context = this,
-    requiredBiometric = BiometricType.FINGERPRINT
-) { result ->
-    when (result) {
-        is AuthResult.Error.BiometricNotSupported -> {
-            // Fingerprint not available on this device
-            showError("Fingerprint not supported")
-        }
-        // ... handle other results
-    }
-}
-```
-
 ### Check Available Biometrics
 
 ```kotlin
