@@ -216,10 +216,10 @@ Policy enforcement happens before authentication:
 **Simplified API** (v1.0.3+):
 ```kotlin
 // Clean, minimal API surface
-authenticate(context: FragmentActivity, callback: (AuthResult) -> Unit)
+authenticate(context: AppCompatActivity, callback: (AuthResult) -> Unit)
 ```
 
-**FragmentActivity Requirement**:
+**AppCompatActivity Requirement**:
 - Required by Android's BiometricPrompt API
 - Needed for DialogFragment lifecycle management
 - Cannot use regular Context or Activity

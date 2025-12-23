@@ -2,7 +2,7 @@ package com.definex.biometricsdk.auth
 
 import android.content.Context
 import androidx.biometric.BiometricPrompt
-import androidx.fragment.app.FragmentActivity
+import androidx.appcompat.app.AppCompatActivity
 import com.definex.biometricsdk.model.AuthResult
 import com.definex.biometricsdk.model.BiometricType
 import com.definex.biometricsdk.model.RiskReport
@@ -32,11 +32,11 @@ class BiometricAuthenticator {
      * Authenticates the user using biometric authentication.
      * The system will automatically use any available enrolled biometric (fingerprint, face, etc.)
      * 
-     * @param context The FragmentActivity context (required for BiometricPrompt)
+     * @param context The AppCompatActivity context (required for BiometricPrompt)
      * @param callback Callback for authentication result
      */
     fun authenticate(
-        context: FragmentActivity,
+        context: AppCompatActivity,
         callback: (AuthResult) -> Unit
     ) {
         Logger.d("Starting biometric authentication")

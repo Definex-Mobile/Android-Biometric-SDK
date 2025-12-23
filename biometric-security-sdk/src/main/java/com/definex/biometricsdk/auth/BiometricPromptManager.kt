@@ -6,7 +6,7 @@ import androidx.biometric.BiometricPrompt
 import androidx.biometric.BiometricPrompt.AuthenticationCallback
 import androidx.biometric.BiometricPrompt.PromptInfo
 import androidx.core.content.ContextCompat
-import androidx.fragment.app.FragmentActivity
+import androidx.appcompat.app.AppCompatActivity
 import com.definex.biometricsdk.model.AuthResult
 import com.definex.biometricsdk.util.Logger
 
@@ -15,7 +15,7 @@ import com.definex.biometricsdk.util.Logger
  * Wraps the system BiometricPrompt API with a simpler interface.
  */
 internal class BiometricPromptManager(
-    private val activity: FragmentActivity
+    private val activity: AppCompatActivity
 ) {
     
     /**

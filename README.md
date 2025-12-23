@@ -73,9 +73,9 @@ Add biometric permissions to your `AndroidManifest.xml`:
 ```kotlin
 import com.definex.biometricsdk.auth.BiometricAuthenticator
 import com.definex.biometricsdk.model.AuthResult
-import androidx.fragment.app.FragmentActivity
+import androidx.appcompat.app.AppCompatActivity
 
-class MainActivity : FragmentActivity() {
+class MainActivity : AppCompatActivity() {
     
     private val biometricAuthenticator = BiometricAuthenticator()
     
@@ -195,7 +195,7 @@ Main entry point for the SDK.
 
 #### Methods
 
-- `authenticate(context: FragmentActivity, callback: (AuthResult) -> Unit)` - Authenticate user with biometrics
+- `authenticate(context: AppCompatActivity, callback: (AuthResult) -> Unit)` - Authenticate user with biometrics
 - `evaluateRisk(context: Context): RiskReport` - Evaluate device security risks
 - `setSecurityPolicy(policy: SecurityPolicy)` - Set security policy to enforce
 - `getAvailableBiometrics(context: Context): Set<BiometricType>` - Get available and enrolled biometric types
@@ -255,11 +255,11 @@ Static methods:
 
 ## Best Practices
 
-### 1. Always Use FragmentActivity
+### 1. Always Use AppCompatActivity
 
 ```kotlin
 // ✅ Correct
-class MainActivity : FragmentActivity() {
+class MainActivity : AppCompatActivity() {
     fun authenticate() {
         biometricAuthenticator.authenticate(this) { result -> }
     }
@@ -271,7 +271,7 @@ fun authenticate(context: Context) {
 }
 ```
 
-**Why?** BiometricPrompt API requires `FragmentActivity` for lifecycle management and DialogFragment support.
+**Why?** BiometricPrompt API requires `AppCompatActivity` for lifecycle management and DialogFragment support.
 
 ### 2. Check Capabilities Before Authenticating
 
@@ -351,7 +351,7 @@ The SDK is organized into the following packages:
 
 3. **Security Detection**: Security detectors use heuristics and may produce false positives or miss sophisticated attacks. They should be used as part of a defense-in-depth strategy.
 
-4. **FragmentActivity Requirement**: Due to Android's BiometricPrompt API design, `FragmentActivity` is required. Regular `Context` or `Activity` cannot be used.
+4. **AppCompatActivity Requirement**: Due to Android's BiometricPrompt API design, `AppCompatActivity` is required. Regular `Context` or `Activity` cannot be used.
 
 ## License
 
