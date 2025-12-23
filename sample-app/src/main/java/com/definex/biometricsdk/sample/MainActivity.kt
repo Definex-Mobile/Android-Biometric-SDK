@@ -94,10 +94,7 @@ class MainActivity : AppCompatActivity() {
         tvAuthResult.text = "Authenticating..."
         tvAuthResult.setTextColor(Color.BLUE)
         
-        biometricAuthenticator.authenticate(
-            context = this,
-            challenge = null
-        ) { result ->
+        biometricAuthenticator.authenticate(this) { result ->
             handleAuthResult(result)
         }
     }

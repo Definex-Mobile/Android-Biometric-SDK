@@ -22,11 +22,9 @@ internal class BiometricPromptManager(
      * Shows the biometric prompt for authentication.
      * The system will automatically use any available enrolled biometric.
      * 
-     * @param cryptoObject Optional crypto object for cryptographic operations
      * @param callback Callback for authentication result
      */
     fun authenticate(
-        cryptoObject: BiometricPrompt.CryptoObject? = null,
         callback: (AuthResult) -> Unit
     ) {
         val executor = ContextCompat.getMainExecutor(activity)
@@ -60,11 +58,7 @@ internal class BiometricPromptManager(
         val promptInfo = buildPromptInfo()
         
         Logger.d("Showing biometric prompt")
-        if (cryptoObject != null) {
-            biometricPrompt.authenticate(promptInfo, cryptoObject)
-        } else {
-            biometricPrompt.authenticate(promptInfo)
-        }
+        biometricPrompt.authenticate(promptInfo)
     }
     
     /**

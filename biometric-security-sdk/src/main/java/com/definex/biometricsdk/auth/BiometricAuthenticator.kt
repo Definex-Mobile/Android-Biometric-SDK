@@ -32,13 +32,11 @@ class BiometricAuthenticator {
      * Authenticates the user using biometric authentication.
      * The system will automatically use any available enrolled biometric (fingerprint, face, etc.)
      * 
-     * @param context The FragmentActivity context
-     * @param challenge Optional challenge string for cryptographic operations
+     * @param context The FragmentActivity context (required for BiometricPrompt)
      * @param callback Callback for authentication result
      */
     fun authenticate(
         context: FragmentActivity,
-        challenge: String? = null,
         callback: (AuthResult) -> Unit
     ) {
         Logger.d("Starting biometric authentication")
@@ -63,15 +61,7 @@ class BiometricAuthenticator {
         
         // Step 3: Show biometric prompt
         val promptManager = BiometricPromptManager(context)
-        
-        // If challenge is provided, we could use it with a CryptoObject
-        // For now, authenticate without crypto object
-        val cryptoObject: BiometricPrompt.CryptoObject? = null
-        
-        promptManager.authenticate(
-            cryptoObject = cryptoObject,
-            callback = callback
-        )
+        promptManager.authenticate(callback)
     }
     
     /**
