@@ -1,14 +1,14 @@
 # Android Biometric Security SDK
 
-A commercial-grade Android SDK for biometric authentication with comprehensive security features including root detection, emulator detection, hook detection, and hardware-backed encryption.
+A production-ready Android SDK for biometric authentication with comprehensive security features including root detection, emulator detection, hook detection, and configurable security policies.
 
 ## Features
 
 ### 🔐 Biometric Authentication
 - Unified API for biometric authentication using system BiometricPrompt
-- Support for specific biometric types (Fingerprint, Face, Iris)
-- Automatic capability detection
-- Hardware-backed cryptographic operations
+- System automatically selects available enrolled biometric (fingerprint, face, iris)
+- Automatic capability and enrollment detection
+- Support for both strong and weak biometrics (BIOMETRIC_WEAK)
 
 ### 🛡️ Security Detection
 - **Root Detection**: Detects su binary, Magisk, dangerous system properties, and test-keys
@@ -16,30 +16,25 @@ A commercial-grade Android SDK for biometric authentication with comprehensive s
 - **Emulator Detection**: Identifies Android emulators and virtual devices
 - **Debug Detection**: Checks if the app is running in debug mode
 
-### 🔒 Secure Storage
-- Hardware-backed AES-GCM encryption
-- EncryptedSharedPreferences for secure data storage
-- Biometric-bound encryption keys
-- Automatic key invalidation on biometric enrollment changes
-
 ### ⚙️ Security Policy System
 - Configurable security policies
 - Enforce authentication restrictions based on device security state
 - Pre-defined policy templates (Permissive, Moderate, Strict)
+- Custom policy configuration support
 
 ## Requirements
 
 - **Min SDK**: 28 (Android 9.0)
 - **Target SDK**: 34 (Android 14)
 - **Kotlin**: 1.9.20+
+- **Java**: 11+
 - **AndroidX Biometric**: 1.2.0-alpha05+
-
 
 ## Installation
 
 ### Step 1: Add JitPack Repository
 
-Add JitPack to your projects settings.gradle.kts:
+Add JitPack to your project's `settings.gradle.kts`:
 
 ```kotlin
 dependencyResolutionManagement {
@@ -54,17 +49,17 @@ dependencyResolutionManagement {
 
 ### Step 2: Add Dependency
 
-Add the SDK dependency to your apps build.gradle.kts:
+Add the SDK dependency to your app's `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    implementation("com.github.Definex-Mobile:Android-Biometric-SDK:1.0.0")
+    implementation("com.github.Definex-Mobile:Android-Biometric-SDK:1.0.3")
 }
 ```
 
 ### Step 3: Add Permissions
 
-Add biometric permissions to your AndroidManifest.xml:
+Add biometric permissions to your `AndroidManifest.xml`:
 
 ```xml
 <uses-permission android:name="android.permission.USE_BIOMETRIC" />
@@ -78,17 +73,14 @@ Add biometric permissions to your AndroidManifest.xml:
 ```kotlin
 import com.definex.biometricsdk.auth.BiometricAuthenticator
 import com.definex.biometricsdk.model.AuthResult
+import androidx.fragment.app.FragmentActivity
 
 class MainActivity : FragmentActivity() {
     
     private val biometricAuthenticator = BiometricAuthenticator()
     
     fun authenticate() {
-        biometricAuthenticator.authenticate(
-            context = this,
-            // System automatically chooses available biometric
-            challenge = null
-        ) { result ->
+        biometricAuthenticator.authenticate(this) { result ->
             when (result) {
                 is AuthResult.Success -> {
                     // Authentication successful
@@ -98,9 +90,13 @@ class MainActivity : FragmentActivity() {
                     // Biometric not recognized
                     showError("Authentication failed")
                 }
-                is AuthResult.Error -> {
+                is AuthResult.Error.SecurityViolation -> {
+                    // Security policy violation
+                    handleSecurityViolation(result.report)
+                }
+                is AuthResult.Error.AuthenticationError -> {
                     // Handle error
-                    handleError(result)
+                    handleError(result.errorCode, result.errorMessage)
                 }
             }
         }
@@ -108,18 +104,21 @@ class MainActivity : FragmentActivity() {
 }
 ```
 
-### Enforce Specific Biometric Type
 ### Check Available Biometrics
 
 ```kotlin
 val availableBiometrics = biometricAuthenticator.getAvailableBiometrics(context)
 
 if (availableBiometrics.contains(BiometricType.FACE)) {
-    // Face authentication is available
+    // Face authentication is available and enrolled
 }
 
 if (availableBiometrics.contains(BiometricType.FINGERPRINT)) {
-    // Fingerprint authentication is available
+    // Fingerprint authentication is available and enrolled
+}
+
+if (availableBiometrics.isEmpty()) {
+    // No biometric authentication available
 }
 ```
 
@@ -188,7 +187,6 @@ biometricAuthenticator.authenticate(this) { result ->
 }
 ```
 
-
 ## API Reference
 
 ### BiometricAuthenticator
@@ -197,12 +195,12 @@ Main entry point for the SDK.
 
 #### Methods
 
-- `authenticate(context, requiredBiometric, challenge, callback)` - Authenticate user with biometrics
-- `evaluateRisk(context)` - Evaluate device security risks
-- `setSecurityPolicy(policy)` - Set security policy to enforce
-- `getAvailableBiometrics(context)` - Get available biometric types
-- `isBiometricAvailable(context, type)` - Check if specific biometric is available
-- `setDebugLogging(enabled)` - Enable/disable debug logging
+- `authenticate(context: FragmentActivity, callback: (AuthResult) -> Unit)` - Authenticate user with biometrics
+- `evaluateRisk(context: Context): RiskReport` - Evaluate device security risks
+- `setSecurityPolicy(policy: SecurityPolicy)` - Set security policy to enforce
+- `getAvailableBiometrics(context: Context): Set<BiometricType>` - Get available and enrolled biometric types
+- `isBiometricAvailable(context: Context, type: BiometricType): Boolean` - Check if specific biometric is available
+- `setDebugLogging(enabled: Boolean)` - Enable/disable debug logging
 
 ### BiometricType
 
@@ -217,7 +215,6 @@ Sealed class representing authentication results:
 
 - `AuthResult.Success(cryptoObject)` - Authentication successful
 - `AuthResult.Failed` - Biometric not recognized
-- `AuthResult.Error.BiometricNotSupported(type)` - Required biometric not available
 - `AuthResult.Error.SecurityViolation(report)` - Security policy violated
 - `AuthResult.Error.AuthenticationError(errorCode, errorMessage)` - Authentication error
 
@@ -235,8 +232,8 @@ data class RiskReport(
 ```
 
 Methods:
-- `hasAnyRisk()` - Returns true if any risk detected
-- `getDetectedRisks()` - Returns list of detected risks as strings
+- `hasAnyRisk(): Boolean` - Returns true if any risk detected
+- `getDetectedRisks(): List<String>` - Returns list of detected risks as strings
 
 ### SecurityPolicy
 
@@ -252,10 +249,33 @@ data class SecurityPolicy(
 ```
 
 Static methods:
-- `SecurityPolicy.permissive()` - Allow all devices
+- `SecurityPolicy.permissive()` - Allow all devices (default)
 - `SecurityPolicy.moderate()` - Block rooted and hooked devices
 - `SecurityPolicy.strict()` - Block all security risks
 
+## Best Practices
+
+### 1. Always Use FragmentActivity
+
+```kotlin
+// ✅ Correct
+class MainActivity : FragmentActivity() {
+    fun authenticate() {
+        biometricAuthenticator.authenticate(this) { result -> }
+    }
+}
+
+// ❌ Wrong - Context is not supported
+fun authenticate(context: Context) {
+    biometricAuthenticator.authenticate(context) { result -> } // Won't compile
+}
+```
+
+**Why?** BiometricPrompt API requires `FragmentActivity` for lifecycle management and DialogFragment support.
+
+### 2. Check Capabilities Before Authenticating
+
+```kotlin
 val availableBiometrics = biometricAuthenticator.getAvailableBiometrics(context)
 if (availableBiometrics.isEmpty()) {
     // No biometric authentication available
@@ -271,7 +291,6 @@ biometricAuthenticator.authenticate(this) { result ->
     when (result) {
         is AuthResult.Success -> handleSuccess()
         is AuthResult.Failed -> handleFailure()
-        is AuthResult.Error.BiometricNotSupported -> handleNotSupported(result.type)
         is AuthResult.Error.SecurityViolation -> handleSecurityViolation(result.report)
         is AuthResult.Error.AuthenticationError -> handleError(result.errorCode, result.errorMessage)
     }
@@ -287,17 +306,14 @@ if (BuildConfig.DEBUG) {
 }
 ```
 
-```
-
 ## Sample App
 
 The SDK includes a comprehensive sample app demonstrating all features:
 
-- Biometric authentication with different types
+- Biometric authentication
 - Device capability detection
 - Security risk assessment
 - Security policy configuration
-- Encrypted storage operations
 
 To run the sample app:
 
@@ -310,34 +326,60 @@ To run the sample app:
 The SDK is organized into the following packages:
 
 - `auth/` - Biometric authentication components
-- `crypto/` - Encryption and key management
+  - `BiometricAuthenticator` - Main SDK entry point
+  - `BiometricPromptManager` - BiometricPrompt wrapper
+  - `CapabilityChecker` - Biometric capability and enrollment detection
 - `security/` - Security detectors (root, hook, emulator, debug)
+  - `RootDetector` - Root detection
+  - `HookDetector` - Hook framework detection
+  - `EmulatorDetector` - Emulator detection
+  - `DebugDetector` - Debug mode detection
+  - `SecurityPolicyEvaluator` - Policy enforcement
 - `model/` - Data models and sealed classes
+  - `AuthResult` - Authentication result sealed class
+  - `BiometricType` - Biometric type enum
+  - `RiskReport` - Security risk report
+  - `SecurityPolicy` - Security policy configuration
 - `util/` - Utility functions and extensions
+  - `Logger` - Safe logging utility
 
 ## Limitations
 
-1. **Biometric Type Detection**: Face and Iris detection relies on `PackageManager` features which may not be accurate on all devices. Fingerprint detection is more reliable.
+1. **Biometric Type Detection**: Face and Iris detection relies on `PackageManager` features which may not be accurate on all devices. Fingerprint detection is more reliable using `BiometricManager`.
 
-2. **Security Detection**: Security detectors use heuristics and may produce false positives or miss sophisticated attacks. They should be used as part of a defense-in-depth strategy.
+2. **System-Controlled Biometric Selection**: The Android system automatically selects which biometric to show. The SDK cannot force a specific biometric type to be displayed.
 
-3. **Hardware Backing**: Encryption keys are hardware-backed on devices with Trusted Execution Environment (TEE) or Secure Element. On devices without hardware security, keys are software-backed.
+3. **Security Detection**: Security detectors use heuristics and may produce false positives or miss sophisticated attacks. They should be used as part of a defense-in-depth strategy.
+
+4. **FragmentActivity Requirement**: Due to Android's BiometricPrompt API design, `FragmentActivity` is required. Regular `Context` or `Activity` cannot be used.
 
 ## License
 
-This is a commercial SDK. Please contact the vendor for licensing information.
+This SDK is open source. See LICENSE file for details.
 
 ## Support
 
-For issues, questions, or feature requests, please contact support or open an issue in the project repository.
+For issues, questions, or feature requests, please open an issue on GitHub.
 
 ## Version History
 
+### Version 1.0.3 (Current)
+- Simplified authentication API by removing unused `challenge` parameter
+- Removed `cryptoObject` parameter (not used)
+- Cleaner, more intuitive API surface
+
+### Version 1.0.2
+- Fixed Gradle wrapper for JitPack build
+- Excluded sample-app from JitPack build (library only)
+- Improved face biometric detection with enrollment checks
+
+### Version 1.0.1
+- Added USE_FINGERPRINT permission
+- Changed BIOMETRIC_STRONG to BIOMETRIC_WEAK for face support
+
 ### Version 1.0.0
 - Initial release
-- Biometric authentication with type enforcement
+- Biometric authentication with automatic type selection
 - Security detection (root, hook, emulator, debug)
-- Hardware-backed encryption
-- Secure storage
 - Security policy system
-
+- Capability and enrollment detection

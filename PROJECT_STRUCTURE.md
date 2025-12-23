@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project contains a commercial-grade Android Biometric Security SDK with a comprehensive sample application.
+This project contains a production-ready Android Biometric Security SDK with a comprehensive sample application demonstrating all features.
 
 ## Project Structure
 
@@ -13,16 +13,16 @@ Android-Biometric-SDK/
 │   │   ├── AndroidManifest.xml
 │   │   └── java/com/definex/biometricsdk/
 │   │       ├── auth/                    # Biometric Authentication
-│   │       │   ├── BiometricAuthenticator.kt      (Public API)
-│   │       │   ├── BiometricPromptManager.kt      (Prompt wrapper)
-│   │       │   └── CapabilityChecker.kt           (Sensor detection)
+│   │       │   ├── BiometricAuthenticator.kt      (Public API - Main entry point)
+│   │       │   ├── BiometricPromptManager.kt      (BiometricPrompt wrapper)
+│   │       │   └── CapabilityChecker.kt           (Capability & enrollment detection)
 │   │       ├── crypto/                  # Encryption & Key Management
 │   │       │   ├── KeyStoreManager.kt             (Hardware-backed keys)
-│   │       │   ├── CipherProvider.kt              (AES-GCM cipher)
+│   │       │   └── CipherProvider.kt              (AES-GCM cipher)
 │   │       ├── model/                   # Data Models
 │   │       │   ├── BiometricType.kt               (Enum: FINGERPRINT, FACE, IRIS)
-│   │       │   ├── AuthResult.kt                  (Sealed class)
-│   │       │   ├── RiskReport.kt                  (Security assessment)
+│   │       │   ├── AuthResult.kt                  (Sealed class for auth results)
+│   │       │   ├── RiskReport.kt                  (Security assessment data)
 │   │       │   ├── SecurityPolicy.kt              (Policy configuration)
 │   │       │   └── EncryptedPayload.kt            (Encrypted data container)
 │   │       ├── security/                # Security Detectors
@@ -51,20 +51,19 @@ Android-Biometric-SDK/
 │   │       │   ├── strings.xml
 │   │       │   ├── colors.xml
 │   │       │   └── themes.xml
-│   │       ├── drawable/
-│   │       │   └── ic_launcher_foreground.xml
-│   │       └── mipmap-anydpi-v26/
-│   │           ├── ic_launcher.xml
-│   │           └── ic_launcher_round.xml
+│   │       └── drawable/
+│   │           └── ic_launcher_background.xml
 │   ├── build.gradle.kts
 │   └── proguard-rules.pro
 │
 ├── gradle/
 │   └── wrapper/
+│       ├── gradle-wrapper.jar
 │       └── gradle-wrapper.properties
 ├── build.gradle.kts                     # Root build configuration
 ├── settings.gradle.kts                  # Module configuration
 ├── gradle.properties                    # Gradle properties
+├── jitpack.yml                          # JitPack build configuration
 ├── .gitignore
 ├── README.md                            # Main documentation
 └── PROJECT_STRUCTURE.md                 # This file
@@ -77,12 +76,19 @@ Android-Biometric-SDK/
 **Package**: `com.definex.biometricsdk`
 
 **Key Features**:
-- Biometric authentication with sensor-specific enforcement
+- Biometric authentication with automatic type selection
+- System-controlled biometric selection (fingerprint, face, iris)
+- Enrollment verification for fingerprint and face
 - Root, Hook, Emulator, and Debug detection
-- Hardware-backed AES-GCM encryption
-- Secure storage with EncryptedSharedPreferences
-- Configurable security policies
+- Configurable security policies with pre-defined templates
 - Comprehensive risk reporting
+
+**Public API**:
+- `BiometricAuthenticator` - Main SDK entry point
+- `BiometricType` - Enum for biometric types
+- `AuthResult` - Sealed class for authentication results
+- `SecurityPolicy` - Security policy configuration
+- `RiskReport` - Security risk assessment
 
 **Dependencies**:
 - androidx.biometric:biometric:1.2.0-alpha05
@@ -95,17 +101,16 @@ Android-Biometric-SDK/
 **Package**: `com.definex.biometricsdk.sample`
 
 **Features**:
-- Biometric authentication demo (any, fingerprint, face, iris)
-- Device capability detection
+- Biometric authentication demo
+- Device capability detection display
 - Security risk assessment display
 - Security policy configuration UI
-- Encrypted storage operations demo
+- Real-time authentication feedback
 
 **Dependencies**:
 - biometric-security-sdk (module dependency)
 - Material Components
-- ConstraintLayout
-- ViewBinding
+- AppCompat
 
 ## Build Configuration
 
@@ -113,9 +118,9 @@ Android-Biometric-SDK/
 - **Target SDK**: 34 (Android 14)
 - **Compile SDK**: 34
 - **Kotlin**: 1.9.20
-- **Gradle**: 8.2
-- **Android Gradle Plugin**: 8.2.0
-- **JVM Target**: 17
+- **Gradle**: 8.4
+- **Android Gradle Plugin**: 8.3.2
+- **JVM Target**: 11
 
 ## Getting Started
 
@@ -123,6 +128,12 @@ Android-Biometric-SDK/
 
 ```bash
 ./gradlew build
+```
+
+### Build SDK Only
+
+```bash
+./gradlew :biometric-security-sdk:assemble
 ```
 
 ### Run Sample App
@@ -139,51 +150,84 @@ Android-Biometric-SDK/
 
 ## Implementation Highlights
 
-### 1. Biometric Type Enforcement
+### 1. System-Controlled Biometric Selection
 
-The SDK enforces specific biometric types by:
-1. Checking device capabilities using `PackageManager` features
-2. Returning `BiometricNotSupported` error if required type is unavailable
-3. NOT showing BiometricPrompt if capability check fails
+The SDK uses Android's BiometricPrompt which automatically selects the best available biometric:
+1. System checks enrolled biometrics (fingerprint, face, iris)
+2. System presents appropriate UI based on available sensors
+3. SDK cannot force a specific biometric type to be displayed
+4. SDK can detect which types are enrolled via `getAvailableBiometrics()`
 
-### 2. Security Policy System
+### 2. Enrollment Detection
+
+**Fingerprint**:
+- Uses `BiometricManager.canAuthenticate()` for modern detection
+- Falls back to hardware feature check if needed
+- Deprecated `FingerprintManager.hasEnrolledFingerprints()` suppressed
+
+**Face**:
+- Inference-based detection: if biometric available but fingerprint not enrolled, face must be enrolled
+- PackageManager.FEATURE_FACE check as secondary method
+- Works on most devices despite manufacturer inconsistencies
+
+**Iris**:
+- Hardware feature check only (rare on consumer devices)
+
+### 3. Security Policy System
 
 Three-tier policy system:
 - **Permissive**: Allow all devices (default)
 - **Moderate**: Block rooted and hooked devices
-- **Strict**: Block all security risks
+- **Strict**: Block all security risks (root, emulator, hooks, debug)
 - **Custom**: Configure individual restrictions
 
-### 3. Hardware-Backed Encryption
-
-- Uses Android KeyStore for key storage
-- Keys are bound to `AUTH_BIOMETRIC_STRONG`
-- Keys invalidated on biometric enrollment changes
-- AES-256-GCM authenticated encryption
+Policy enforcement happens before authentication:
+1. Evaluate device security
+2. Check against policy
+3. Block with `SecurityViolation` error if policy violated
+4. Proceed with authentication if policy allows
 
 ### 4. Security Detection
 
 **Root Detection**:
-- su binary in common paths
-- Magisk directories
-- Dangerous system properties
+- su binary in common paths (/system/bin, /system/xbin, etc.)
+- Magisk directories and files
+- Dangerous system properties (ro.debuggable, ro.secure)
 - Test-keys in build tags
 
 **Hook Detection**:
-- XposedBridge class loading
+- XposedBridge class loading attempt
 - EdXposed/LSPosed detection
 - Riru/Zygisk detection
-- Frida server detection
+- Frida server detection (port 27042)
 - Suspicious loaded libraries
 
 **Emulator Detection**:
-- QEMU kernel property
-- Known emulator manufacturers
+- QEMU kernel property check
+- Known emulator manufacturers (Genymotion, Google)
 - Generic device fingerprints
 - Suspicious hardware names
 
 **Debug Detection**:
 - ApplicationInfo.FLAG_DEBUGGABLE check
+
+### 5. API Design
+
+**Simplified API** (v1.0.3+):
+```kotlin
+// Clean, minimal API surface
+authenticate(context: FragmentActivity, callback: (AuthResult) -> Unit)
+```
+
+**FragmentActivity Requirement**:
+- Required by Android's BiometricPrompt API
+- Needed for DialogFragment lifecycle management
+- Cannot use regular Context or Activity
+
+**No Unused Parameters**:
+- Removed `challenge` parameter (not used)
+- Removed `cryptoObject` parameter (not used)
+- Removed `requiredBiometric` parameter (system controls selection)
 
 ## API Usage Examples
 
@@ -195,20 +239,17 @@ authenticator.authenticate(this) { result ->
     when (result) {
         is AuthResult.Success -> println("Success!")
         is AuthResult.Failed -> println("Failed")
-        is AuthResult.Error -> println("Error: $result")
+        is AuthResult.Error.SecurityViolation -> println("Security violation!")
+        is AuthResult.Error.AuthenticationError -> println("Error: ${result.errorMessage}")
     }
 }
 ```
 
-### Enforce Fingerprint
+### Check Capabilities
 
 ```kotlin
-authenticator.authenticate(
-    context = this,
-    requiredBiometric = BiometricType.FINGERPRINT
-) { result ->
-    // Handle result
-}
+val availableBiometrics = authenticator.getAvailableBiometrics(context)
+// Returns Set<BiometricType> of enrolled biometrics
 ```
 
 ### Security Policy
@@ -221,38 +262,48 @@ authenticator.setSecurityPolicy(SecurityPolicy.strict())
 
 ```kotlin
 val report = authenticator.evaluateRisk(context)
-if (report.rooted) {
-    println("Device is rooted!")
+if (report.hasAnyRisk()) {
+    val risks = report.getDetectedRisks()
+    println("Risks: ${risks.joinToString()}")
 }
-```
-
-### Secure Storage
-
-```kotlin
-storage.putEncryptedString("key", "value")
-val value = storage.getEncryptedString("key")
 ```
 
 ## Testing
 
 The sample app provides comprehensive testing of all SDK features:
 
-1. **Authentication Tests**: Test all biometric types
-2. **Capability Tests**: Check available biometrics
-3. **Security Tests**: Evaluate device security
-4. **Policy Tests**: Configure and test policies
-5. **Storage Tests**: Test encrypted storage operations
+1. **Authentication Tests**: Test biometric authentication flow
+2. **Capability Tests**: Check available and enrolled biometrics
+3. **Security Tests**: Evaluate device security risks
+4. **Policy Tests**: Configure and test security policies
+
+## JitPack Integration
+
+The SDK is published via JitPack for easy integration:
+
+```kotlin
+// settings.gradle.kts
+maven { url = uri("https://jitpack.io") }
+
+// build.gradle.kts
+implementation("com.github.Definex-Mobile:Android-Biometric-SDK:1.0.3")
+```
+
+**JitPack Configuration** (`jitpack.yml`):
+- Java 11 for build
+- Excludes sample-app from build (library only)
+- Maven publish plugin configured
 
 ## Notes
 
-- All code is production-ready with no TODOs or placeholders
-- Comprehensive error handling throughout
+- All code is production-ready with comprehensive error handling
 - Safe logging that respects debug mode
 - Clean architecture with separation of concerns
 - Well-documented public API
 - ProGuard rules included for release builds
+- No TODOs or placeholder code
+- Deprecated APIs properly suppressed with explanations
 
 ## License
 
-Commercial license. Contact vendor for details.
-
+Open source. See LICENSE file for details.
