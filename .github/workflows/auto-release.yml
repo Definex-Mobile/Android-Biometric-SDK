@@ -53,25 +53,25 @@ jobs:
       - name: Generate Release Notes
         id: release_notes
         run: |
-          # Get PR title and body
-          PR_TITLE="${{ github.event.pull_request.title }}"
-          PR_BODY="${{ github.event.pull_request.body }}"
-          PR_NUMBER="${{ github.event.pull_request.number }}"
-          PR_AUTHOR="${{ github.event.pull_request.user.login }}"
-          
-          # Create release notes
-          cat > release_notes.md << EOF
+          # Create release notes header
+          cat > release_notes.md << 'EOFNOTES'
           # 🎉 Android Biometric Security SDK v${{ steps.get_version.outputs.version }}
           
           ## 📝 Changes
           
-          **PR #${PR_NUMBER}**: ${PR_TITLE}
+          **PR #${{ github.event.pull_request.number }}**: ${{ github.event.pull_request.title }}
           
-          ${PR_BODY}
+          EOFNOTES
+          
+          # Append PR body (safely)
+          echo "${{ github.event.pull_request.body }}" >> release_notes.md
+          
+          # Append installation and requirements
+          cat >> release_notes.md << 'EOFNOTES'
           
           ## 📦 Installation
           
-          \`\`\`kotlin
+          ```kotlin
           // settings.gradle.kts
           maven { url = uri("https://jitpack.io") }
           
@@ -79,7 +79,7 @@ jobs:
           dependencies {
               implementation("com.github.Definex-Mobile:Android-Biometric-SDK:${{ steps.get_version.outputs.version }}")
           }
-          \`\`\`
+          ```
           
           ## 📄 Requirements
           
@@ -90,12 +90,12 @@ jobs:
           
           ## 🙏 Contributors
           
-          - @${PR_AUTHOR}
+          - @${{ github.event.pull_request.user.login }}
           
           ---
           
           **Full Changelog**: https://github.com/${{ github.repository }}/compare/v${{ steps.get_version.outputs.version }}...master
-          EOF
+          EOFNOTES
           
           cat release_notes.md
       
