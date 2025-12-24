@@ -65,7 +65,7 @@ afterEvaluate {
                 
                 groupId = "com.github.Definex-Mobile"
                 artifactId = "biometric-security-sdk"
-                version = "1.0.4"
+                version = "1.0.5"
                 
                 pom {
                     name.set("Biometric Security SDK")
